@@ -1,23 +1,23 @@
-# Stage 1 - Build
-FROM maven:3.9.11-eclipse-temurin-21 AS builder
+# Stage 1: Build Stage
+FROM eclipse-temurin:21-jdk-alpine AS builder
+WORKDIR /app
+COPY . .
+RUN chmod +x mvnw
+RUN ./mvnw clean package -DskipTests
 
+# Stage 2: Runtime Stage
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-COPY pom.xml .
+# Production Security Best Practice: Create and run as a non-root user
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-RUN mvn dependency:go-offline
-
-COPY src ./src
-
-RUN mvn clean package -DskipTests
-
-# Stage 2 - Runtime
-FROM eclipse-temurin:21-jre
-
-WORKDIR /app
-
+# Copy compiled JAR from Stage 1 (builder)
 COPY --from=builder /app/target/*.jar app.jar
+
+# Switch to non-root user
+USER appuser
 
 EXPOSE 8080
 
-ENTRYPOINT ["java","-jar","app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]

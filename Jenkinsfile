@@ -2,68 +2,52 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "purna303703/zero-downtime-app"
-        IMAGE_TAG = "${BUILD_NUMBER}"
+        // Change 'YOUR_DOCKERHUB_USERNAME' to your actual Docker Hub username
+        DOCKER_IMAGE = 'YOUR_DOCKERHUB_USERNAME/zero-downtime-app'
+        SONAR_HOST_URL = 'https://Badland-deserve-ducking.ngrok-free.dev'
     }
 
     stages {
-
-        stage('Build Application') {
+        stage('Checkout Code') {
             steps {
-                sh '''
-                    chmod +x mvnw
-                    ./mvnw clean package -DskipTests
-                '''
+                checkout scm
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Compile & Unit Test') {
             steps {
-                sh '''
-                    docker build -t $IMAGE_NAME:$IMAGE_TAG .
-                    docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
-                '''
+                sh './mvnw clean test'
             }
         }
 
-        stage('Docker Login') {
+        stage('SonarQube Static Analysis') {
             steps {
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'dockerhub-creds',
-                        usernameVariable: 'DOCKER_USER',
-                        passwordVariable: 'DOCKER_PASS'
-                    )
-                ]) {
-                    sh '''
-                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                    '''
+                withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                    sh "./mvnw sonar:sonar -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_TOKEN}"
                 }
             }
         }
 
-        stage('Push Docker Image') {
+        stage('Docker Multi-Stage Build') {
             steps {
-                sh '''
-                    docker push $IMAGE_NAME:$IMAGE_TAG
-                    docker push $IMAGE_NAME:latest
-                '''
+                sh "docker build -t ${DOCKER_IMAGE}:${GIT_COMMIT} -t ${DOCKER_IMAGE}:latest ."
+            }
+        }
+
+        stage('Push Image to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh "echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin"
+                    sh "docker push ${DOCKER_IMAGE}:${GIT_COMMIT}"
+                    sh "docker push ${DOCKER_IMAGE}:latest"
+                }
             }
         }
     }
 
     post {
-
-        success {
-            echo "Pipeline completed successfully."
-        }
-
-        failure {
-            echo "Pipeline failed."
-        }
-
         always {
-            cleanWs()
+            sh 'docker logout || true'
         }
     }
 }

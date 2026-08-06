@@ -1,5 +1,5 @@
-target
 .git
-.idea
-.vscode
-README.md
+.gitignore
+.mvn/
+target/
+*.md
