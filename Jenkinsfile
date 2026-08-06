@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         // Change 'YOUR_DOCKERHUB_USERNAME' to your actual Docker Hub username
-        DOCKER_IMAGE = 'YOUR_DOCKERHUB_USERNAME/zero-downtime-app'
+        DOCKER_IMAGE = 'purna303703/zero-downtime-app'
         SONAR_HOST_URL = 'https://Badland-deserve-ducking.ngrok-free.dev'
     }
 
