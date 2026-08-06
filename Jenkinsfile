@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'purna303703/zero-downtime-app' // Replace with your exact Docker Hub username
+        DOCKER_IMAGE = 'purnaspr/zero-downtime-app' // Replace with your exact Docker Hub username
         SONAR_HOST_URL = 'https://Badland-deserve-ducking.ngrok-free.dev'
     }
 
