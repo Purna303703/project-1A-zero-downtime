@@ -2,8 +2,7 @@ pipeline {
     agent any
 
     environment {
-        // Change 'YOUR_DOCKERHUB_USERNAME' to your actual Docker Hub username
-        DOCKER_IMAGE = 'purna303703/zero-downtime-app'
+        DOCKER_IMAGE = 'purna303703/zero-downtime-app' // Replace with your exact Docker Hub username
         SONAR_HOST_URL = 'https://Badland-deserve-ducking.ngrok-free.dev'
     }
 
@@ -16,14 +15,14 @@ pipeline {
 
         stage('Compile & Unit Test') {
             steps {
-                sh './mvnw clean test'
+                sh 'chmod +x mvnw && ./mvnw clean test'
             }
         }
 
         stage('SonarQube Static Analysis') {
             steps {
                 withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                    sh "./mvnw sonar:sonar -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_TOKEN}"
+                    sh "chmod +x mvnw && ./mvnw sonar:sonar -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_TOKEN}"
                 }
             }
         }
